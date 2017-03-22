@@ -61,6 +61,17 @@
 		{
 			return new self();
 		}
+
+		public function get_controls(){
+			$controls = $this->controls;
+			$result = Backend::$events->fireEvent('system:onGetHtmlEditorConfigControls', $controls);
+			foreach ($result as $value) {
+				if ($value && is_array($value)) {
+					$controls = array_merge( $controls, $value );
+				}
+			}
+			return $controls;
+		}
 		
 		public static function get($module, $code)
 		{
@@ -211,17 +222,17 @@
 		public function list_plugins()
 		{
 			$plugins = array();
-			
+			$controls = $this->get_controls();
 			$all_row_buttons = array_merge(explode(',', $this->controls_row_1),
 				explode(',', $this->controls_row_2),
 				explode(',', $this->controls_row_3));
 
 			foreach ($all_row_buttons as $button)
 			{
-				if (!strlen($button) || !array_key_exists($button, $this->controls))
+				if (!strlen($button) || !array_key_exists($button, $controls))
 					continue;
 					
-				$button_data = $this->controls[$button];
+				$button_data = $controls[$button];
 				if (array_key_exists('plugin', $button_data))
 					$plugins[$button_data['plugin']] = 1;
 			}

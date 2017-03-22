@@ -1,4 +1,8 @@
-<? $db_name = $form_field->dbName; ?>
+<?
+$db_name = $form_field->dbName;
+$controls = $form_model->get_controls()
+?>
+
 
 <div class="editor_buttons <?= $form_field->dbName == 'controls_row_3' ? 'right_controls' : null ?>">
 	<h3><?= h($form_field->getColDefinition()->displayName) ?></h3>
@@ -10,7 +14,7 @@
 			?>
 				<? if ($item != 'separator'): ?>
 					<li class="<?= $item ?>" style="background-image: url(<?= root_url('modules/backend/resources/images/tinymce_buttons/'.$item.'.gif')?>)">
-						<?= array_key_exists($item, $form_model->controls) ? $form_model->controls[$item]['name'] : 'Unknown control' ?>
+						<?= array_key_exists($item, $controls) ? $controls[$item]['name'] : 'Unknown control' ?>
 					</li>
 				<? else: ?>
 					<li class="separator">Separator</li>

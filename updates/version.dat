@@ -95,3 +95,4 @@
 #1.3.11 Minor update in the email API
 #1.3.12 Minor update in the email API
 #1.3.13 Added new API event: core:onAfterArchiveCreate
+#1.4.0 github:damanic takeover | Added new API event system:onGetHtmlEditorConfigControls
