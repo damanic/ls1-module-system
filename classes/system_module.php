@@ -15,6 +15,21 @@
 		}
 
 		/**
+		 * Builds user permissions interface
+		 * For drop-down and radio fields you should also add methods returning
+		 * options. For example, of you want to have "Access Level" drop-down:
+		 * public function get_access_level_options();
+		 * This method should return array with keys corresponding your option identifiers
+		 * and values corresponding its titles.
+		 *
+		 * @param $host_obj ActiveRecord object to add fields to
+		 */
+		public function buildPermissionsUi($host_obj)
+		{
+			$host_obj->add_field($this, 'manage_email_templates', 'Manage email templates', 'left')->renderAs(frm_checkbox)->comment('Create email templates and edit template content.', 'above');
+		}
+
+		/**
 		 * Returns a list of the module back-end GUI tabs.
 		 * @param Backend_TabCollection $tabCollection A tab collection object to populate.
 		 * @return mixed
@@ -22,18 +37,22 @@
 		public function listTabs($tabCollection)
 		{
 			$user = Phpr::$security->getUser();
-			
-			if (!$user->is_administrator())
+			$settings_items_allowed = count(self::getSettingItemsPermissible($user));
+			if(!$user->is_administrator() && !$settings_items_allowed){
 				return;
-			
-			$tabs = $tabCollection->tab('system', 'System', 'settings', 1000)->
-				addSecondLevel('settings', 'Settings', 'settings')->
-				addSecondLevel('users', 'Users', 'users');
-				
-			if (!Phpr::$config->get('DISABLE_BACKUP_FEATURE'))
-				$tabs->addSecondLevel('backup', 'Backup or Restore', 'backup');
-				
-			$tabs->addSecondLevel('modules', 'Modules & Updates', 'modules');
+			}
+
+			$tabs = $tabCollection->tab('system', 'System', 'settings', 1000);
+
+			if ($user->is_administrator()){
+				$tabs->addSecondLevel('settings', 'Settings', 'settings');
+				$tabs->addSecondLevel('users', 'Users', 'users');
+
+				if (!Phpr::$config->get('DISABLE_BACKUP_FEATURE'))
+					$tabs->addSecondLevel('backup', 'Backup or Restore', 'backup');
+
+				$tabs->addSecondLevel('modules', 'Modules & Updates', 'modules');
+			}
 		}
 		
 		/**
@@ -90,7 +109,7 @@
 					'url'=>'/system/email',
 					'description'=>'Configure email settings. Specify SMTP server address and authorization parameters. ',
 					'sort_id'=>20,
-					'section'=>'System'
+					'section'=>'System',
 					),
 				array(
 					'icon'=>'/modules/system/resources/images/themes.png', 
@@ -106,7 +125,8 @@
 					'url'=>'/system/email_templates',
 					'description'=>'Edit the email message templates that your store sends to customers and the store team members.',
 					'sort_id'=>30,
-					'section'=>'System'
+					'section'=>'System',
+					'access_permission'=>'system:manage_email_templates'
 					),
 				array(
 					'icon'=>'/modules/cms/resources/images/icon_editor_settings.png', 
@@ -147,6 +167,15 @@
 					'section'=>'System'
 				)
 			);
+		}
+
+		public static function getSettingItemsPermissible($user, $group=false){
+			if($user->is_administrator()){
+				$items = Core_ModuleManager::listSettingsItems($group);
+			} else {
+				$items = method_exists('Core_ModuleManager', 'listSettingsItemsPermissible') ? Core_ModuleManager::listSettingsItemsPermissible($user,$group) : array();
+			}
+			return $items;
 		}
 	}
 ?>

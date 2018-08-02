@@ -39,7 +39,9 @@
 						?>
 
 						<?= backend_ajax_button('Cancel', 'edit_onCancel') ?>
+						<? if($this->currentUser->is_administrator()): ?>
 						<?= backend_ajax_button('Delete', 'edit_onDelete', array('class'=>"right"), "confirm: 'Do you really want to delete this template?'") ?>
+						<? endif; ?>
 						<div class="clear"></div>
 					</form>
 				</td>

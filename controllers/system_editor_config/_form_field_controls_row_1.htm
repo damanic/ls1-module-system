@@ -18,7 +18,6 @@
 				<li class="separator">Separator</li>
 				<?
 					foreach ($available_controls as $item):
-					traceLog($item);
 				?>
 				<li class="<?= $item ?>" style="background-image: url(<?= root_url('modules/backend/resources/images/tinymce_buttons/'.$item.'.gif')?>)">
 					<?= array_key_exists($item, $controls) ? $controls[$item]['name'] : 'Unknown control' ?>

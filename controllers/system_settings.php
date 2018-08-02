@@ -2,7 +2,6 @@
 
 	class System_Settings extends Backend_Controller
 	{
-		protected $access_for_groups = array(Users_Groups::admin);
 		
 		public function __construct()
 		{
@@ -13,10 +12,15 @@
 		
 		public function index()
 		{
+			$user = Phpr::$security->getUser();
+			$permissible_items = System_Module::getSettingItemsPermissible($user,true);
+			if(!count($permissible_items)){
+				Phpr::$response->redirect(url('/'));
+				exit;
+			}
 			$this->app_page_title = 'Settings';
 			$this->app_page = 'settings';
-			
-			$this->viewData['items'] = Core_ModuleManager::listSettingsItems(true);
+			$this->viewData['items'] = $permissible_items;
 			$this->viewData['body_class'] = 'no_padding';
 		}
 	}
