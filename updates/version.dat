@@ -97,3 +97,4 @@
 #1.3.13 Added new API event: core:onAfterArchiveCreate
 #1.4.0 github:damanic takeover | Added new API event system:onGetHtmlEditorConfigControls
 #1.4.1 Support for user permission access to items in system settings
+#1.4.2 IPV6 Support
