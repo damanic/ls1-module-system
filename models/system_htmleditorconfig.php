@@ -106,7 +106,9 @@
 			$this->define_column('allow_more_colors', 'Allow More Colors')->invisible();
 			$this->define_column('valid_elements', 'Valid Elements')->invisible()->validation()->fn('trim');
 			$this->define_column('valid_child_elements', 'Valid Child Elements')->invisible()->validation()->fn('trim');
-			
+
+			$this->define_column('default_height', 'Default Height')->invisible()->validation()->fn('trim');
+
 			$this->defined_column_list = array();
 			Backend::$events->fireEvent('system:onExtendHtmlEditorConfigModel', $this, $context);
 			$this->api_added_columns = array_keys($this->defined_column_list);
@@ -118,6 +120,7 @@
 			$this->add_form_field('controls_row_2')->tab('Toolbar');
 			$this->add_form_field('controls_row_3')->tab('Toolbar');
 
+			$this->add_form_field('default_height')->tab('Customize')->comment('Enter a number to set the editors starting height in pixels, the editor can be resized by the user', 'above', true);
 			$this->add_form_field('content_css')->renderAs(frm_text)->tab('Customize')->comment('Specify an URL of a custom CSS file to use inside the editable area. By default the following file used:<br/> /modules/cms/resources/css/htmlcontent.css', 'above', true);
 			$this->add_form_field('block_formats')->renderAs(frm_text)->tab('Customize')->comment('A comma separated list of formats that will be available in the Format Selector list. The default value of this option is:<br/>p, address, pre, h1, h2, h3, h4, h5, h6', 'above', true);
 
@@ -172,6 +175,7 @@
 			$this->content_css = '/modules/cms/resources/css/htmlcontent.css';
 			$this->block_formats = 'p, address, pre, h1, h2, h3, h4, h5, h6';
 			$this->allow_more_colors = true;
+			$this->default_height = 100;
 		}
 		
 		public function before_save($deferred_session_key = null) 
@@ -287,6 +291,8 @@
 				
 			if ($this->valid_child_elements)
 				$field->htmlValidChildElements($this->valid_child_elements);
+
+			$field->htmlDefaultHeight = $this->default_height;
 		}
 		
 		public function output_editor_config()
