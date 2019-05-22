@@ -40,7 +40,7 @@
 			try
 			{
 				$update_data = Core_UpdateManager::create()->request_update_list();
-				$this->viewData['update_list'] = $update_data['data'];
+				$this->viewData['update_list'] = isset($update_data['data']) ? $update_data['data'] : array();
 				$this->viewData['developer_license'] = isset($update_data['developer']) && $update_data['developer'];
 			}
 			catch (Exception $ex)
