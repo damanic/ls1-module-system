@@ -24,7 +24,9 @@
 
 			$this->define_column('reply_to_mode', 'Reply-To Address')->invisible();
 			$this->define_column('reply_to_address', 'Reply To Address value')->invisible()->validation()->email(true, 'Please specify a valid email address');
-			
+
+			$this->define_column('allow_recipient_block', 'Allow recipient to block this notification');
+
 			$this->defined_column_list = array();
 			Backend::$events->fireEvent('core:onExtendEmailTemplateModel', $this, $context);
 			$this->api_added_columns = array_keys($this->defined_column_list);
@@ -33,10 +35,11 @@
 		public function define_form_fields($context = null)
 		{
 			$this->add_form_field('is_system')->comment('Internal notifications are sent to the system administrators and use the System email layout', 'above')->tab('Message');
+			$this->add_form_field('allow_recipient_block')->comment('Allows recipient to block this email through their preferences, do not enable this feature on important transactional templates (eg. password reset and registration confirmation)', 'above')->tab('Message');
 			if ($context == 'create')
 			{
 				$this->add_form_field('code', 'left')->comment('Template code is used by modules to refer templates', 'above')->tab('Message');
-				$this->add_form_field('subject', 'right')->comment('Email message subject', 'above')->tab('Message');
+				$this->add_form_field('subject', 'right')->comment('Email message subject',  'above')->tab('Message');
 				
 				$this->add_form_field('description')->size('tiny')->tab('Message');
 			} else
@@ -159,7 +162,19 @@
 		{
 			try
 			{
-				$template = System_EmailLayout::find_by_code('external');
+				if(System_EmailParams::get()->allow_recipient_blocking){
+					$pass = true;
+					if(Shop_CustomerPreferences::get($customer, 'shop:block_non_transactional_emails') == 1){
+						$pass = false;
+					} else if (Shop_CustomerPreferences::get($customer, 'shop:block_email_template_'.$this->id) == 1){
+						$pass = false;
+					}
+					if(!$pass){
+						throw new Phpr_ApplicationException('Email to customer blocked by customer preferences');
+					}
+				}
+
+				$layout = System_EmailLayout::find_by_code('external');
 				$reply_to = $this->get_reply_address($sender_email, $sender_name, $customer_email, $customer_name);
 
 				$customer_email = $customer_email ? $customer_email : $customer->email;
@@ -173,8 +188,9 @@
 					if (array($api_data_fields))
 						extract($api_data_fields);
 				}
-				
-				$message_text = $template->format($message_text);
+
+				$message_text = $this->apply_customer_email_vars($customer, $message_text);
+				$message_text = $layout->format($message_text);
 				$viewData = array('content'=>$message_text, 'custom_data'=>$custom_data);
 
 				$result = Core_Email::send('system', 'email_message', $viewData, $subject, $customer_name, $customer_email, array(), $settings_obj, $reply_to);
@@ -183,7 +199,10 @@
 			}
 			catch (exception $ex)
 			{
+				traceLog($ex->getMessage());
+				return false;
 			}
+			return true;
 		}
 		
 		/**
@@ -208,7 +227,7 @@
 					if (array($api_data_fields))
 						extract($api_data_fields);
 				}
-
+				$message_text = $this->apply_user_email_vars($message_text);
 				$message_text = $template->format($message_text);
 				$viewData = array('content'=>$message_text);
 				Core_Email::sendToList('system', 'email_message', $viewData, $subject, $users, $throw_exceptions, $reply_to, $settings_obj);
@@ -241,7 +260,41 @@
 			
 			Core_Email::send('system', 'email_message', $viewData, $this->subject, $name, $email, array(), null, $reply_to);
 		}
-		
+
+		public function apply_customer_email_vars($customer, $message_text){
+			$value_set = array(
+				'this_template_unsubscribe_url' => null,
+				'all_template_unsubscribe_url' => null
+			);
+			$params = System_EmailParams::get();
+			if($params->allow_recipient_blocking){
+				$pref = Shop_CustomerPreferences::get_customer_preference($customer, 'shop:block_non_transactional_emails');
+				$value_set['all_template_unsubscribe_url'] = $pref->generate_preference_url(1,'/');
+				$pref = Shop_CustomerPreferences::get_customer_preference($customer, 'shop:block_email_template_'.$this->id);
+				$value_set['this_template_unsubscribe_url'] = $pref->generate_preference_url(1,'/');
+			}
+			foreach($value_set as $var => $value){
+				$message_text = str_replace('{'.$var.'}', $value, $message_text);
+			}
+
+			return $message_text;
+		}
+
+		public function apply_user_email_vars($message_text, $user=null){
+			$value_set = array(
+				'this_template_unsubscribe_url' => null,
+				'all_template_unsubscribe_url' => null
+			);
+			foreach($value_set as $var => $value){
+				$message_text = str_replace('{'.$var.'}', $value, $message_text);
+			}
+			//@todo create unsub links for backend that require login
+			return $message_text;
+		}
+
+
+
+
 		/*
 		 * Event descriptions
 		 */

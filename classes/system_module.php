@@ -169,6 +169,25 @@
 			);
 		}
 
+		/**
+		 * Returns a list of email template variables provided by the module.
+		 * The method must return an array of section names, variable names,
+		 * descriptions and demo-values:
+		 * array('Shop variables'=>array(
+		 * 	'order_total'=>array('Outputs order total value', '$99.99')
+		 * ))
+		 * @return array
+		 */
+		public function listEmailVariables()
+		{
+			return array(
+				'Template variables'=>array(
+					'this_template_unsubscribe_url'=>array('Generates a link for recipient to unsubscribe from future delivery of this specific email template', '{this_template_unsubscribe_url}'),
+					'all_template_unsubscribe_url'=>array('Generates a link for recipient to unsubscribe from future delivery of all non-transactional email templates', '{all_template_unsubscribe_url}')
+				)
+			);
+		}
+
 		public static function getSettingItemsPermissible($user, $group=false){
 			if($user->is_administrator()){
 				$items = Core_ModuleManager::listSettingsItems($group);

@@ -51,6 +51,9 @@
 			$this->define_column('smtp_ssl', 'SSL connection required');
 			
 			$this->define_column('sendmail_path', 'Sendmail path')->validation()->fn('trim')->method('validate_sendmail');
+
+			$this->define_column( 'allow_recipient_blocking', 'Allow Recipient Unsubscribe' );
+
 		}
 
 		public function define_form_fields($context = null)
@@ -60,6 +63,9 @@
 			$this->add_form_field('sender_name', 'left')->tab('General Parameters');
 			$this->add_form_field('sender_email', 'right')->tab('General Parameters');
 			$this->add_form_field('templating_engine')->comment('Please specify a templating engine to use for parsing compound email variables and email layouts.', 'above')->tab('General Parameters')->renderAs(frm_dropdown);
+			if(class_exists('Shop_CustomerPreferences') && method_exists('Shop_CustomerPreferences', 'get_customer_preference')) {
+				$this->add_form_field( 'allow_recipient_blocking' )->tab( 'General Parameters' )->comment( 'Whilst switched on you can selectively display unsubscribe links in your email template content. When switched off, any recipient preferences will be ignored and any email variables that generate unsubscribe links will be excluded from email content', 'above' )->renderAs( frm_onoffswitcher );
+			}
 
 			$this->add_form_field('smtp_address')->tab('SMTP');
 			$this->add_form_field('smtp_authorization')->tab('SMTP')->comment('Use this checkbox if your SMTP server requires authorization.');
@@ -75,6 +81,8 @@
 			$this->form_tab_id('Sendmail', 'tab_sendmail');
 			$this->form_tab_visibility('SMTP', $this->send_mode == self::mode_smtp);
 			$this->form_tab_visibility('Sendmail', $this->send_mode == self::mode_sendmail);
+
+
 		}
 		
 		public function get_send_mode_options($key_index = -1)
