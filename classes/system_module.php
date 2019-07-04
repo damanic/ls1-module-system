@@ -180,12 +180,17 @@
 		 */
 		public function listEmailVariables()
 		{
-			return array(
-				'Template variables'=>array(
-					'this_template_unsubscribe_url'=>array('Generates a link for recipient to unsubscribe from future delivery of this specific email template', '{this_template_unsubscribe_url}'),
-					'all_template_unsubscribe_url'=>array('Generates a link for recipient to unsubscribe from future delivery of all non-transactional email templates', '{all_template_unsubscribe_url}')
-				)
-			);
+			$params = System_EmailParams::get();
+			$result = array();
+			if($params->allow_recipient_blocking) {
+				$result = array(
+					'Template variables' => array(
+						'this_template_unsubscribe_url' => array( 'Generates a link for recipient to unsubscribe from future delivery of this specific email template', '{this_template_unsubscribe_url}' ),
+						'all_template_unsubscribe_url'  => array( 'Generates a link for recipient to unsubscribe from future delivery of all non-transactional email templates', '{all_template_unsubscribe_url}' )
+					)
+				);
+			}
+			return $result;
 		}
 
 		public static function getSettingItemsPermissible($user, $group=false){
