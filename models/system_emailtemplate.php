@@ -7,6 +7,7 @@
 	{
 		public $table_name = 'system_email_templates';
 		public $reply_to_mode = 'default';
+		public $log_notification = false;
 		protected $api_added_columns = array();
 
 		public static function create($values = null) 
@@ -35,7 +36,7 @@
 		public function define_form_fields($context = null)
 		{
 			$this->add_form_field('is_system')->comment('Internal notifications are sent to the system administrators and use the System email layout', 'above')->tab('Message');
-			$this->add_form_field('allow_recipient_block')->comment('Allows recipient to block this email through their preferences, do not enable this feature on important transactional templates (eg. password reset and registration confirmation)', 'above')->tab('Message');
+			$this->add_form_field('allow_recipient_block')->comment('Allows recipient to block this email through their preferences. Do not enable this feature on important transactional templates (eg. password reset and registration confirmation)', 'above')->tab('Message');
 			if ($context == 'create')
 			{
 				$this->add_form_field('code', 'left')->comment('Template code is used by modules to refer templates', 'above')->tab('Message');
