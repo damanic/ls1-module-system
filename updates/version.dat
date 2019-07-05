@@ -101,3 +101,4 @@
 #1.4.3 Adds TinyMCE default height parameter to HTML editor config
 #1.4.4 Allow recipients to unsubscribe from email template notifications
 #1.4.5 Minor usability improvements.
+#1.4.6 Minor update in the email API
