@@ -191,8 +191,8 @@
 				}
 
 				$message_text = $this->apply_customer_email_vars($customer, $message_text);
-				$message_text = $layout->format($message_text);
-				$viewData = array('content'=>$message_text, 'custom_data'=>$custom_data);
+				$message_content = $layout->format($message_text);
+				$viewData = array('content'=>$message_content, 'custom_data'=>$custom_data);
 
 				$result = Core_Email::send('system', 'email_message', $viewData, $subject, $customer_name, $customer_email, array(), $settings_obj, $reply_to);
 
