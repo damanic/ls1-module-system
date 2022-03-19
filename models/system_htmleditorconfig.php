@@ -54,7 +54,7 @@
 			'attribs'=>array('name'=>'Edit Attributes', 'plugin'=>'xhtmlxtras'),
 			'tablecontrols'=>array('name'=>'Table Controls', 'plugin'=>'table')
 		);
-		
+
 		protected $api_added_columns = array();
 
 		public static function create()
@@ -72,22 +72,22 @@
 			}
 			return $controls;
 		}
-		
+
 		public static function get($module, $code)
 		{
 			$obj = System_HtmlEditorConfig::create()->where('code=?', $code)->where('module=?', $module)->find();
 			if (!$obj)
 				self::find_init_configs();
-			else 
+			else
 				return $obj;
-				
+
 			$obj = System_HtmlEditorConfig::create()->where('code=?', $code)->where('module=?', $module)->find();
 			if (!$obj)
 				throw new Phpr_ApplicationException('HTML editor configuration '.$code.' not found.');
-				
+
 			return $obj;
 		}
-		
+
 		public function define_columns($context = null)
 		{
 			$this->define_column('description', 'HTML Editor');
@@ -95,7 +95,7 @@
 			$this->define_column('controls_row_1', 'First Row')->invisible();
 			$this->define_column('controls_row_2', 'Second Row')->invisible();
 			$this->define_column('controls_row_3', 'Third Row')->invisible();
-			
+
 			$this->define_column('content_css', 'Content CSS')->invisible();
 			$this->define_column('block_formats', 'Formats')->invisible();
 
@@ -107,13 +107,13 @@
 			$this->define_column('valid_elements', 'Valid Elements')->invisible()->validation()->fn('trim');
 			$this->define_column('valid_child_elements', 'Valid Child Elements')->invisible()->validation()->fn('trim');
 
-			$this->define_column('default_height', 'Default Height')->invisible()->validation()->fn('trim');
+			$this->define_column('default_height', 'Default Height')->type('number')->invisible()->validation()->fn('trim');
 
 			$this->defined_column_list = array();
 			Backend::$events->fireEvent('system:onExtendHtmlEditorConfigModel', $this, $context);
 			$this->api_added_columns = array_keys($this->defined_column_list);
 		}
-		
+
 		public function define_form_fields($context = null)
 		{
 			$this->add_form_field('controls_row_1')->tab('Toolbar');
@@ -131,7 +131,7 @@
 			$this->add_form_field('allow_more_colors')->tab('Customize')->comment('This option enables you to disable the "more colors" link for the text and background color menus.', 'above');
 			$this->add_form_field('valid_elements')->tab('Clean Up')->comment('The valid_elements option defines which elements will remain in the edited text when the editor saves. You can find more information about this option in <a href="http://wiki.moxiecode.com/index.php/TinyMCE:Configuration/valid_elements" target="_blank">TinyMCE documentation</a>', 'above', true)->size('large');
 			$this->add_form_field('valid_child_elements')->tab('Clean Up')->comment('This option gives you the ability to specify what elements are valid inside different parent elements. You can find more information about this option in <a href="http://wiki.moxiecode.com/index.php/TinyMCE:Configuration/valid_child_elements" target="_blank">TinyMCE documentation</a>', 'above', true)->size('large');
-			
+
 			Backend::$events->fireEvent('system:onExtendHtmlEditorConfigForm', $this, $context);
 			foreach ($this->api_added_columns as $column_name)
 			{
@@ -162,13 +162,13 @@
 				$item = trim($item);
 				if (!strlen($item))
 					continue;
-					
+
 				$result[] = $item;
 			}
-			
+
 			return $result;
 		}
-		
+
 		protected function init_config_data()
 		{
 			$this->controls_row_1 = "cut,copy,paste,pastetext,pasteword,separator,undo,redo,separator,link,unlink,separator,image,separator,bold,italic,underline,separator,formatselect,separator,bullist,numlist,separator,code";
@@ -177,14 +177,14 @@
 			$this->allow_more_colors = true;
 			$this->default_height = 100;
 		}
-		
-		public function before_save($deferred_session_key = null) 
+
+		public function before_save($deferred_session_key = null)
 		{
 			$this->block_formats = $this->cleanup_comma_list($this->block_formats);
 			$this->font_colors = $this->cleanup_comma_list($this->font_colors, false);
 			$this->background_colors = $this->cleanup_comma_list($this->background_colors, false);
 		}
-		
+
 		protected function cleanup_comma_list($list, $lower = true)
 		{
 			$items = explode(',', trim($list));
@@ -194,35 +194,35 @@
 				$item = trim($item);
 				if ($lower)
 					$item = strtolower($item);
-				
+
 				if (!strlen($item))
 					continue;
-					
+
 				$result[$item] = 1;
 			}
 
 			return implode(', ', array_keys($result));
 		}
-		
+
 		public function list_custom_styles()
 		{
 			$styles = $this->custom_styles;
 			$styles = str_replace("\r\n", "\n", $styles);
 			$styles = explode("\n", $styles);
-			
+
 			$result = array();
 			foreach ($styles as $style)
 			{
 				$style = trim($style);
 				if (!strlen($style))
 					continue;
-					
+
 				$result[] = $style;
 			}
-			
+
 			return implode(";", $result);
 		}
-		
+
 		public function list_plugins()
 		{
 			$plugins = array();
@@ -235,75 +235,75 @@
 			{
 				if (!strlen($button) || !array_key_exists($button, $controls))
 					continue;
-					
+
 				$button_data = $controls[$button];
 				if (array_key_exists('plugin', $button_data))
 					$plugins[$button_data['plugin']] = 1;
 			}
-			
+
 			return array_keys($plugins);
 		}
-		
+
 		public function list_font_sizes()
 		{
 			$sizes = explode("\n", str_replace("\r\n", "\n", $this->font_sizes));
-			
+
 			$result = array();
 			foreach ($sizes as $size)
 			{
 				$size = trim($size);
 				if (!strlen($size))
 					continue;
-					
+
 				$result[] = $size;
 			}
-			
+
 			return implode(",", $result);
 		}
-		
+
 		public function apply_to_form_field($field)
 		{
 			$plugins = implode(',', $this->list_plugins());
 			$custom_styles = $this->list_custom_styles();
-			
+
 			$field->htmlPlugins($plugins);
 
 			$field->htmlButtons1($this->controls_row_1);
 
 			if ($this->controls_row_2)
 				$field->htmlButtons2($this->controls_row_2);
-				
+
 			if ($this->controls_row_3)
 				$field->htmlButtons3($this->controls_row_3);
-				
+
 			$field->htmlContentCss($this->content_css);
 			$field->htmlBlockFormats($this->block_formats);
 			$field->htmlCustomStyles($custom_styles);
 			$field->htmlFontSizes($this->list_font_sizes());
-			
+
 			$field->htmlFontColors(str_replace(' ', '', $this->font_colors));
 			$field->htmlBackgroundColors(str_replace(' ', '', $this->background_colors));
-			
+
 			$field->htmlAllowMoreColors($this->allow_more_colors);
-			
+
 			if ($this->valid_elements)
 				$field->htmlValidElements($this->valid_elements);
-				
+
 			if ($this->valid_child_elements)
 				$field->htmlValidChildElements($this->valid_child_elements);
 
 			$field->htmlDefaultHeight = $this->default_height;
 		}
-		
+
 		public function output_editor_config()
 		{
 			$result = array();
 			$result['plugins'] = '"paste,searchreplace,inlinepopups,'.implode(',', $this->list_plugins()).'"';
 			$result['theme_advanced_buttons1'] = '"'.$this->controls_row_1.'"';
-			
+
 			$result['theme_advanced_buttons2'] = '"'.$this->controls_row_2.'"';
 			$result['theme_advanced_buttons3'] = '"'.$this->controls_row_3.'"';
-			
+
 			$result['theme_advanced_blockformats'] = '"'.Core_String::js_encode($this->block_formats).'"';
 			$result['theme_advanced_styles'] = '"'.Core_String::js_encode($this->custom_styles).'"';
 
@@ -324,14 +324,14 @@
 
 			if ($this->valid_child_elements)
 				$result['valid_child_elements'] = '"'.Core_String::js_encode($this->valid_child_elements).'"';
-				
+
 			if ($this->content_css)
 				$result['content_css'] = '"'.$this->content_css.'"';
-				
+
 			$result_str = array();
 			foreach ($result as $name=>$value)
 				$result_str[] = $name.': '.$value;
-				
+
 			return implode(",\n", $result_str).",\n";
 		}
 
@@ -343,7 +343,7 @@
 			$this->description = $description;
 			$this->save();
 		}
-		
+
 		public static function find_init_configs()
 		{
 			$configurations = Core_ModuleManager::listHtmlEditorConfigs();
