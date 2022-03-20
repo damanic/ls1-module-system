@@ -36,7 +36,7 @@
 				</tbody>
 			</table>
 
-			<? if ( count( $error->code_highlight->lines ) ): ?>
+			<? if ( isset( $error->code_highlight->lines) && count( $error->code_highlight->lines ) ): ?>
 				<div class="details">
 					<h3>Code Highlight</h3>
 					<div class="code"><pre class="brush:<?= $error->code_highlight->brush ?>;toolbar:false;wrap-lines:false;tab-size:3;first-line:<?= $error->code_highlight->start_line + 1 ?>;highlight:[<?= $error->code_highlight->error_line + 1 ?>]"><?
