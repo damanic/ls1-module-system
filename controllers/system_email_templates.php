@@ -24,6 +24,55 @@
 		//protected $access_for_groups = array(Users_Groups::admin);
 		protected $required_permissions = array( 'system:manage_email_templates' );
 
+        protected $blocked_file_types = array(
+            'ade',
+            'adp',
+            'apk',
+            'appx',
+            'appxbundle',
+            'bat',
+            'cab',
+            'chm',
+            'cmd',
+            'com',
+            'cpl',
+            'dll',
+            'dmg',
+            'ex',
+            'ex_',
+            'exe',
+            'hta',
+            'ins',
+            'isp',
+            'iso',
+            'jar',
+            'js',
+            'jse',
+            'lib',
+            'lnk',
+            'mde',
+            'msc',
+            'msi',
+            'msix',
+            'msixbundle',
+            'msp',
+            'mst',
+            'nsh',
+            'pif',
+            'ps1',
+            'scr',
+            'sct',
+            'shb',
+            'sys',
+            'vb',
+            'vbe',
+            'vbs',
+            'vxd',
+            'wsc',
+            'wsf',
+            'wsh'
+        );
+
 		public $globalHandlers = array('onTest');
 
 		public function __construct()
@@ -69,6 +118,15 @@
 			$classes = $model->is_system ? null : 'important';
 			return $classes;
 		}
-	}
 
-?>
+        public function formBeforeFileUploadSave($model, $dbName, $dbFile, $sessionKey){
+            if(is_a($model,'System_EmailTemplate') && $dbName == 'file_attachments' ){
+                $pathInfo = pathinfo($dbFile->name);
+                $fileExtension = isset($pathInfo['extension']) ? $pathInfo['extension'] : null;
+                if (!$fileExtension || in_array($fileExtension,$this->blocked_file_types)) {
+                    $dbFile->delete();
+                    throw new Phpr_ApplicationException('The file type '.strtoupper($fileExtension).' is not permitted for '.$dbName);
+                }
+            }
+        }
+	}

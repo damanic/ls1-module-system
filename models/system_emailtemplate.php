@@ -8,7 +8,19 @@
 		public $table_name = 'system_email_templates';
 		public $reply_to_mode = 'default';
 		public $log_notification = false;
+
 		protected $api_added_columns = array();
+        protected $emailAttachments = array();
+
+        public $has_many = array(
+            'file_attachments' => array(
+                'class_name'  => 'Db_File',
+                'foreign_key' => 'master_object_id',
+                'conditions'  => "master_object_class='System_EmailTemplate'",
+                'order'       => 'id',
+                'delete'      => true
+            ),
+        );
 
 		public static function create($values = null) 
 		{
@@ -27,6 +39,8 @@
 			$this->define_column('reply_to_address', 'Reply To Address value')->invisible()->validation()->email(true, 'Please specify a valid email address');
 
 			$this->define_column('allow_recipient_block', 'Allow recipient to block this notification');
+
+            $this->define_multi_relation_column( 'file_attachments', 'file_attachments', 'Attachments', '@name' )->invisible();
 
 			$this->defined_column_list = array();
 			Backend::$events->fireEvent('core:onExtendEmailTemplateModel', $this, $context);
@@ -57,8 +71,11 @@
 			
 			$this->add_form_field('reply_to_mode')->tab('Email Settings')->renderAs(frm_radio)->comment('Please choose which reply-to email address should be used in email messages based on this template.', 'above');
 			$this->add_form_field('reply_to_address')->tab('Email Settings')->cssClassName('checkbox_align')->cssClasses('form400')->noLabel();
-			
-			Backend::$events->fireEvent('core:onExtendEmailTemplateForm', $this, $context);
+
+            $this->add_form_field('file_attachments')->tab('Attachments')->renderAs(frm_file_attachments)->renderFilesAs('single_file')->addDocumentLabel('Upload a file attachment')->fileDownloadBaseUrl(url('ls_backend/files/get/'))->noAttachmentsLabel('');
+
+
+            Backend::$events->fireEvent('core:onExtendEmailTemplateForm', $this, $context);
 			foreach ($this->api_added_columns as $column_name)
 			{
 				$form_field = $this->find_form_field($column_name);
@@ -244,22 +261,23 @@
 		
 		/**
 		 * Sends email message to a specified email address
-		 * @param string $email Specifies an email address to send the message to
+		 * @param string $recipientEmail Specifies an email address to send the message to
 		 * @param string $message_text Specifies a message text
-		 * @param string $name Specifies a recipient name
+		 * @param string $recipientName Specifies a recipient name
 		 */
-		public function send($email, $message_text, $name = null, $sender_email = null, $sender_name = null, $customer_email = null, $customer_name = null)
+		public function send($recipientEmail, $message_text, $recipientName = null, $sender_email = null, $sender_name = null, $customer_email = null, $customer_name = null)
 		{
-			if (!$name)
-				$name = $email;
+			if (!$recipientName)
+				$recipientName = $recipientEmail;
 				
 			$template = System_EmailLayout::find_by_code('external');
 			$message_text = $template->format($message_text);
+            $attachments =  $this->getEmailAttachments();
 
 			$viewData = array('content'=>$message_text);
 			$reply_to = $this->get_reply_address($sender_email, $sender_name, $customer_email, $customer_name);
 			
-			Core_Email::send('system', 'email_message', $viewData, $this->subject, $name, $email, array(), null, $reply_to);
+			Core_Email::send('system', 'email_message', $viewData, $this->subject, $recipientName, $recipientEmail, array(), null, $reply_to, $attachments);
 		}
 
 		public function apply_customer_email_vars($customer, $message_text){
@@ -292,6 +310,33 @@
 			//@todo create unsub links for backend that require login
 			return $message_text;
 		}
+
+        public function getEmailAttachments(){
+            $attachments = array();
+            if($this->file_attachments){
+                foreach($this->file_attachments as $dbFile){
+                    $attachments[$dbFile->getFileSavePath($dbFile->disk_name)] = $dbFile->name;
+                }
+            }
+            if($this->emailAttachments){
+                $attachments = array_merge($attachments, $this->emailAttachments);
+            }
+            return $attachments;
+        }
+
+        public function addEmailAttachment($filePath, $fileName=null){
+            if (file_exists($filePath)){
+                $pathInfo = pathinfo($filePath);
+                $fileExtension = isset($pathInfo['extension']) ? $pathInfo['extension'] : null;
+                if (!$fileExtension || strtolower($fileExtension) !== 'pdf') {
+                    throw new Phpr_ApplicationException('You can only attach PDF files');
+                }
+                if(!$fileName){
+                    $fileName =$pathInfo['filename'];
+                }
+                $this->emailAttachments[$filePath] = $pathInfo['filename'];
+            }
+        }
 
 
 
