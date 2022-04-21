@@ -210,8 +210,9 @@
 				$message_text = $this->apply_customer_email_vars($customer, $message_text);
 				$message_content = $layout->format($message_text);
 				$viewData = array('content'=>$message_content, 'custom_data'=>$custom_data);
+                $attachments =  $this->getEmailAttachments();
 
-				$result = Core_Email::send('system', 'email_message', $viewData, $subject, $customer_name, $customer_email, array(), $settings_obj, $reply_to);
+				$result = Core_Email::send('system', 'email_message', $viewData, $subject, $customer_name, $customer_email, array(), $settings_obj, $reply_to, $attachments);
 
 				Backend::$events->fireEvent('core:onAfterEmailSendToCustomer', $customer, $this->subject, $message_text, $customer_email, $customer_name, $custom_data, $reply_to, $this, $result);
 			}
@@ -270,8 +271,8 @@
 			if (!$recipientName)
 				$recipientName = $recipientEmail;
 				
-			$template = System_EmailLayout::find_by_code('external');
-			$message_text = $template->format($message_text);
+			$layout = System_EmailLayout::find_by_code('external');
+			$message_text = $layout->format($message_text);
             $attachments =  $this->getEmailAttachments();
 
 			$viewData = array('content'=>$message_text);
@@ -334,7 +335,7 @@
                 if(!$fileName){
                     $fileName =$pathInfo['filename'];
                 }
-                $this->emailAttachments[$filePath] = $pathInfo['filename'];
+                $this->emailAttachments[$filePath] = $fileName;
             }
         }
 
