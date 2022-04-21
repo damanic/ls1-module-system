@@ -72,7 +72,7 @@
 			$this->add_form_field('reply_to_mode')->tab('Email Settings')->renderAs(frm_radio)->comment('Please choose which reply-to email address should be used in email messages based on this template.', 'above');
 			$this->add_form_field('reply_to_address')->tab('Email Settings')->cssClassName('checkbox_align')->cssClasses('form400')->noLabel();
 
-            $this->add_form_field('file_attachments')->tab('Attachments')->renderAs(frm_file_attachments)->renderFilesAs('single_file')->addDocumentLabel('Upload a file attachment')->fileDownloadBaseUrl(url('ls_backend/files/get/'))->noAttachmentsLabel('');
+            $this->add_form_field('file_attachments')->tab('Attachments')->renderAs(frm_file_attachments)->addDocumentLabel('Upload a file attachment')->fileDownloadBaseUrl(url('ls_backend/files/get/'))->noAttachmentsLabel('');
 
 
             Backend::$events->fireEvent('core:onExtendEmailTemplateForm', $this, $context);
